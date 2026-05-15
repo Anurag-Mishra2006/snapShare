@@ -1,36 +1,287 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SnapShare
 
-## Getting Started
+A frictionless temporary photo-sharing web app built for instant sharing.
+Users create a room, get a QR code, and others can instantly join to upload/view photos — no login, no app install, no friction
 
-First, run the development server:
+🌐 Live Demo: https://snap-share-theta.vercel.app/  
+
+---
+# 🚀 Features
+
+- Create temporary photo-sharing rooms
+- Instant room joining via QR code
+- Upload photos without authentication
+- Responsive photo gallery
+- Individual photo download
+- Remove wrongly uploaded photos
+- Automatic room expiration after 24 hours
+- Automatic cleanup of images and database records
+- Mobile-first UI
+---
+# 🏗️ Tech Stack
+
+## Frontend + Backend
+- Next.js App Router
+## Database
+- Supabase
+## Image Storage
+- Cloudinary
+## Styling
+- Tailwind CSS
+## QR Generation
+- qrcode npm package
+## Hosting
+- Vercel
+
+---
+# 📌 Product Philosophy
+
+SnapShare is intentionally designed as an MVP.
+
+The goal is:
+- ship fast
+- learn production engineering
+- avoid overengineering
+- focus on simplicity
+- build maintainable systems
+
+We intentionally DO NOT include:
+- authentication
+- social systems
+- reactions
+- ZIP downloads
+- advanced realtime systems
+- enterprise-level abstractions
+
+---
+# 👨‍💻 Core User Flow
+
+## 1. Create Room
+- User visits homepage
+- Clicks "Create Room"
+- Backend generates unique room ID
+- Room stored in database
+- QR code generated
+- User receives shareable room link
+---
+## 2. Join Room
+- Other users scan QR code
+- Room opens instantly in browser
+No login required.
+---
+## 3. Upload Photos
+- Users select images
+- Images compressed client-side
+- Uploaded to Cloudinary:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+rooms/{roomId}/
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- URLs stored in Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
+## 4. View Photos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Photos displayed in responsive grid
+- Click image to preview
+- Download individually
+---
+## 5. Remove Uploaded Photos
 
-## Learn More
+If a user uploads the wrong image:
+- Click remove/delete button
+- Image removed from:
+- Cloudinary
+- Supabase
+- UI instantly updates
+---
+## 6. Cleanup System
 
-To learn more about Next.js, take a look at the following resources:
+Rooms expire automatically after 24 hours.
+Cron job deletes:
+- Cloudinary images
+- Cloudinary folders
+- Database records
+---
+# 📁 Suggested Folder Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+src/
 
-## Deploy on Vercel
+│
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+├── app/
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+│ ├── api/
+
+│ │ ├── rooms/
+
+│ │ ├── upload/
+
+│ │ ├── delete-photo/
+
+│ │ └── cleanup/
+
+│ │
+
+│ ├── room/[id]/
+
+│ └── page.js
+
+│
+
+├── components/
+
+│ ├── ui/
+
+│ ├── room/
+
+│ ├── upload/
+
+│ └── gallery/
+
+│
+
+├── lib/
+
+│ ├── supabase.js
+
+│ ├── cloudinary.js
+
+│ ├── qr.js
+
+│ └── utils.js
+
+│
+
+├── validators/
+
+│
+
+└── styles/
+
+```
+
+---
+
+# 🔐 Security Considerations
+
+Even for an MVP, important protections include:
+
+- restrict file types
+- limit upload size
+- sanitize room IDs
+- rate limit APIs
+- avoid exposing secret keys
+- use server-side Cloudinary operations
+- validate delete operations carefully
+---
+# ⚡ Performance Considerations
+- compress images client-side
+- lazy load gallery images
+- use optimized image sizes
+- paginate later only if needed
+- avoid unnecessary realtime systems
+---
+# 🌍 Environment Variables
+Create:
+```bash
+
+.env.local
+
+```
+Example:
+
+```env
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CRON_SECRET=your_cron_secret
+```
+
+---
+# ☁️ Deployment
+## Frontend Hosting
+Deploy using:
+- Vercel
+## Database
+Setup using:
+- Supabase
+## Image Storage
+Setup using:
+- Cloudinary
+---
+# 🔄 Cleanup Cron Job
+
+Use a scheduled API route.
+Example flow:
+```bash
+
+Vercel Cron
+
+↓
+
+/api/cleanup
+
+↓
+
+Find expired rooms
+
+↓
+
+Delete Cloudinary assets
+
+↓
+
+Delete DB records
+
+```
+---
+# 🛠️ Local Development
+## Install dependencies
+
+```bash
+
+npm install
+
+```
+
+---
+## Start development server
+
+```bash
+
+npm run dev
+
+```
+
+---
+## Open in browser
+
+```bash
+
+http://localhost:3000
+
+```
+---
+# 🤝 Contributing
+
+Contributions, suggestions, and improvements are welcome.
+
+---
+# 📄 License
+MIT License
+
+---
+# ✨ SnapShare Vision
+Simple.
+Fast.
+Temporary.
+Zero friction photo sharing.
