@@ -1,7 +1,6 @@
 // src/types/database.ts
 // Mirrors your Supabase table schema
 // Use these types across the app for type-safe DB operations
-
 export type Room = {
   id: string
   created_at: string

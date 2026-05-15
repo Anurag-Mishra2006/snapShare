@@ -22,13 +22,14 @@ export default async function RoomPage({ params }: Props) {
 
   if (error || !room) notFound()
 
+  // Fetch full photo objects — need id and public_id for delete feature
   const { data: photos } = await supabase
     .from('photos')
-    .select('cloudinary_url')
+    .select('id, cloudinary_url, cloudinary_public_id')
     .eq('room_id', roomId)
     .order('uploaded_at', { ascending: false })
 
-  const photoUrls = photos?.map(p => p.cloudinary_url) ?? []
+  const photoList = photos ?? []
 
   const roomUrl = `${process.env.NEXT_PUBLIC_APP_URL}/room/${roomId}`
   const qrCodeDataUrl = await QRCode.toDataURL(roomUrl, {
@@ -42,17 +43,6 @@ export default async function RoomPage({ params }: Props) {
       <div className="max-w-lg mx-auto">
 
         {/* Header */}
-        {/* <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold">SnapShare</h1>
-            <p className="text-xs text-gray-500 font-mono mt-0.5">
-              Room · {roomId}
-            </p>
-          </div>
-          <div className="text-xs text-gray-600 bg-gray-900 px-3 py-1.5 rounded-full">
-            ⏳ Expires in 24h
-          </div>
-        </div> */}
         <div className="flex items-center justify-between mb-8">
           <Logo />
           <div className="text-xs text-gray-600 bg-gray-900 px-3 py-1.5 rounded-full">
@@ -83,13 +73,13 @@ export default async function RoomPage({ params }: Props) {
         <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 h-px bg-gray-800" />
           <p className="text-xs text-gray-600">
-            {photoUrls.length} photo{photoUrls.length !== 1 ? 's' : ''} shared
+            {photoList.length} photo{photoList.length !== 1 ? 's' : ''} shared
           </p>
           <div className="flex-1 h-px bg-gray-800" />
         </div>
 
         {/* Photos */}
-        <PhotoGrid initialPhotos={photoUrls} roomId={roomId} />
+        <PhotoGrid initialPhotos={photoList} roomId={roomId} />
 
       </div>
     </main>
