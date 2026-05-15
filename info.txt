@@ -1,0 +1,9 @@
+supabase
+email : diyik26433@hilostar.com
+password : Diyik26433@hilostar.com
+project name : snapshare
+database password : diyik26433@hilostar.com
+
+cloudinary 
+email : diyik26433@hilostar.com
+password : Diyik26433@hilostar.com
