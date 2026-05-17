@@ -29,16 +29,16 @@ export default function UploadButton({ roomId, onUploadComplete }: Props) {
 
         for (const file of files) {
             try {
-                // Step 1 — Compress the image before upload
+                // Step 1 — Compress
                 setProgress(`Compressing ${file.name}...`)
                 const compressed = await imageCompression(file, {
-                    maxSizeMB: 1,          // target max 1MB per image
-                    maxWidthOrHeight: 1920, // cap resolution at 1080p
-                    useWebWorker: true,     // non-blocking compression
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true,
                 })
 
-                // Step 2 — Send to our API route
-                setProgress(`Uploading ${file.name}...`)
+                // Step 2 — Upload + Moderate
+                setProgress(`Checking image...`)  // ← shown during moderation
                 const formData = new FormData()
                 formData.append('file', compressed)
 
@@ -50,11 +50,15 @@ export default function UploadButton({ roomId, onUploadComplete }: Props) {
                 const data = await res.json()
 
                 if (!data.success) {
-                    alert(`Failed to upload ${file.name}`)
+                    if (data.rejected) {
+                        // Moderation rejection — clear message
+                        alert(`⚠️ Photo rejected: ${data.error}`)
+                    } else {
+                        alert(`Failed to upload ${file.name}`)
+                    }
                     continue
                 }
 
-                // Step 3 — Notify parent to add photo to grid
                 onUploadComplete({
                     id: data.id,
                     cloudinary_url: data.url,

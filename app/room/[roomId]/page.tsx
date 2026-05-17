@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import CopyButton from '@/app/components/CopyButton'
 import PhotoGrid from './PhotoGrid'
 import Logo from '@/app/components/Logo'
+import ClusterGrid from '@/app/components/gallery/ClusterGrid'
 
 interface Props {
   params: Promise<{ roomId: string }>
@@ -79,6 +80,7 @@ export default async function RoomPage({ params }: Props) {
         </div>
 
         {/* Photos */}
+        <ClusterGrid photos={photoList} roomId={roomId} />
         <PhotoGrid initialPhotos={photoList} roomId={roomId} />
 
       </div>

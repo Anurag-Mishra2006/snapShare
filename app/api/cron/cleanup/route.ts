@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       // photos auto-delete via ON DELETE CASCADE
       await supabase
         .from('rooms')
-        .update({ is_expired: true })
+        .delete()
         .eq('id', room.id)
 
       cleaned++

@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.105.4",
     "browser-image-compression": "^2.0.2",
     "cloudinary": "^2.10.0",
+    "face-api.js": "^0.22.2",
     "nanoid": "^5.1.11",
     "next": "16.2.6",
     "qrcode": "^1.5.4",
