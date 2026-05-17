@@ -11,7 +11,7 @@ interface CallGeminiParams {
 }
 
 export async function callGemini({ systemPrompt, userText, imageUrl }: CallGeminiParams) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) // ← updated
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' }) 
 
   let attempts = 0
 
