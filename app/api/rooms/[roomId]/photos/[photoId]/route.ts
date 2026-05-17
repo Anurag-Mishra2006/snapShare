@@ -40,6 +40,12 @@ export async function DELETE(req: NextRequest, { params }: Props) {
     .delete()
     .eq('id', photoId)
 
+  // clustering will re-run on next page load with correct photos
+  await supabase
+    .from('clusters')
+    .delete()
+    .eq('room_id', roomId)
+
   if (deleteError) {
     console.error('DB delete failed:', deleteError.message)
     return NextResponse.json(

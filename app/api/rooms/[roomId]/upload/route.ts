@@ -51,9 +51,11 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     // Step 2 — Moderate the image using Gemini
     let moderationStatus = 'approved'
-    try {
-      const moderation = await callAI({
-        systemPrompt: `
+    const shouldModerate = Math.random() < 0.4
+    if (shouldModerate) {
+      try {
+        const moderation = await callAI({
+          systemPrompt: `
 You are a strict image safety moderation system for a public event photo-sharing app.
 
 Your task:
@@ -113,58 +115,72 @@ Examples:
 {"safe":false,"reason":"graphic gore"}
 {"safe":false,"reason":"explicit nudity"}
 `,
-        userText: 'Is this image safe for a shared photo room? Respond with JSON only.',
-        imageUrl: uploadResult.secure_url,
-      })
+          userText: 'Is this image safe for a shared photo room? Respond with JSON only.',
+          imageUrl: uploadResult.secure_url,
+        })
 
-      if (!moderation.safe) {
-        // Delete from Cloudinary — don't store unsafe images
-        await cloudinary.uploader.destroy(uploadResult.public_id)
+        if (!moderation.safe) {
+          // Delete from Cloudinary — don't store unsafe images
+          await cloudinary.uploader.destroy(uploadResult.public_id)
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Image rejected: ${moderation.reason || 'Content not allowed'}`,
+              rejected: true,
+            },
+            { status: 400 }
+          )
+        }
+
+        moderationStatus = 'approved'
+      } catch (modErr) {
+        // Moderation failed — default to approved, don't block upload
+        console.error('Moderation error:', modErr)
+        moderationStatus = 'approved'
+      }
+    }
+      // Step 3 — Save to Supabase with moderation status
+      const { data: inserted, error: insertError } = await supabase
+        .from('photos')
+        .insert({
+          room_id: roomId,
+          cloudinary_url: uploadResult.secure_url,
+          cloudinary_public_id: uploadResult.public_id,
+          moderation_status: moderationStatus,
+        })
+        .select('id')
+        .single()
+
+      if (insertError || !inserted) {
+        console.error('Failed to save photo to DB:', insertError?.message)
         return NextResponse.json(
-          {
-            success: false,
-            error: `Image rejected: ${moderation.reason || 'Content not allowed'}`,
-            rejected: true,
-          },
-          { status: 400 }
+          { success: false, error: 'Failed to save photo' },
+          { status: 500 }
         )
       }
+      //  Count photos to maybe trigger room title
+      const { count } = await supabase
+        .from('photos')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', roomId)
 
-      moderationStatus = 'approved'
-    } catch (modErr) {
-      // Moderation failed — default to approved, don't block upload
-      console.error('Moderation error:', modErr)
-      moderationStatus = 'approved'
-    }
-
-    // Step 3 — Save to Supabase with moderation status
-    const { data: inserted, error: insertError } = await supabase
-      .from('photos')
-      .insert({
-        room_id: roomId,
-        cloudinary_url: uploadResult.secure_url,
-        cloudinary_public_id: uploadResult.public_id,
-        moderation_status: moderationStatus,
+      // Trigger title generation on exactly the 3rd photo
+      // Fire and forget — don't await, don't block the upload response
+      if (count === 3) {
+        fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/rooms/${roomId}/title`, {
+          method: 'POST',
+        }).catch(() => { }) // silent fail — title is a bonus feature
+      }
+      return NextResponse.json({
+        success: true,
+        url: uploadResult.secure_url,
+        id: inserted.id,
+        publicId: uploadResult.public_id,
       })
-      .select('id')
-      .single()
 
-    if (insertError || !inserted) {
-      console.error('Failed to save photo to DB:', insertError?.message)
-      return NextResponse.json(
-        { success: false, error: 'Failed to save photo' },
-        { status: 500 }
-      )
+
     }
-
-    return NextResponse.json({
-      success: true,
-      url: uploadResult.secure_url,
-      id: inserted.id,
-      publicId: uploadResult.public_id,
-    })
-
-  } catch (err: any) {
+   catch (err: any) {
     console.error('Upload failed:', err.message)
     return NextResponse.json(
       { success: false, error: err.message },

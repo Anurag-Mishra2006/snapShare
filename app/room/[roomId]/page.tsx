@@ -41,10 +41,15 @@ export default async function RoomPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-gray-950 text-white px-4 py-10">
       <div className="max-w-lg mx-auto">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Logo />
+          <div>
+            <Logo />
+            {/* Show room title if it exists */}
+            {room.title && (
+              <p className="text-xs text-gray-500 mt-1 ml-1">{room.title}</p>
+            )}
+          </div>
           <div className="text-xs text-gray-600 bg-gray-900 px-3 py-1.5 rounded-full">
             ⏳ Expires in 24h
           </div>

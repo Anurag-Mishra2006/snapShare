@@ -10,7 +10,6 @@ interface Props {
   roomId: string
 }
 
-// Extend Cluster with optional name
 interface NamedCluster extends Cluster {
   dbId: string
   name: string | null
@@ -23,7 +22,7 @@ export default function ClusterGrid({ photos, roomId }: Props) {
   const [progress, setProgress] = useState('')
 
   useEffect(() => {
-    if (photos.length < 2) return
+    if (photos.length < 1) return
 
     async function runClustering() {
       setLoading(true)
@@ -35,7 +34,7 @@ export default function ClusterGrid({ photos, roomId }: Props) {
         const existingData = await existingRes.json()
 
         if (existingData.clusters && existingData.clusters.length > 0) {
-          // Already clustered — just load from DB, skip everything
+          // Already clustered — load from DB, skip re-clustering
           const loaded: NamedCluster[] = existingData.clusters.map((c: any) => ({
             id: c.id,
             dbId: c.id,
@@ -47,25 +46,27 @@ export default function ClusterGrid({ photos, roomId }: Props) {
           setClusters(loaded)
           setLoading(false)
           setProgress('')
-          return // ← exit early, no re-clustering
+          return
         }
 
-        // Step 2 — No existing clusters, run fresh clustering
+        // Step 2 — No existing clusters, run fresh
         setProgress('Loading face detection models...')
         const descriptors = await extractFaceDescriptors(photos)
 
-        if (descriptors.length < 2) {
+        if (descriptors.length === 0) {
           setLoading(false)
           return
         }
 
         setProgress('Grouping matching faces...')
         const found = clusterFaces(descriptors)
+
         if (found.length === 0) {
           setLoading(false)
           return
         }
 
+        // Step 3 — Save clusters to Supabase
         setProgress('Saving groups...')
         await fetch(`/api/rooms/${roomId}/clusters`, {
           method: 'POST',
@@ -78,11 +79,12 @@ export default function ClusterGrid({ photos, roomId }: Props) {
           dbId: `${roomId}_${c.id}`,
           name: null,
         }))
+
         setClusters(namedClusters)
         setLoading(false)
         setProgress('')
 
-        // Step 3 — Name each cluster (only runs once, first time)
+        // Step 4 — Name each cluster async (don't block UI)
         for (const cluster of namedClusters) {
           try {
             const res = await fetch(`/api/rooms/${roomId}/clusters/name`, {
@@ -94,6 +96,13 @@ export default function ClusterGrid({ photos, roomId }: Props) {
                 photoCount: cluster.photoIds.length,
               }),
             })
+
+            // If quota hit or any error — skip naming, don't crash
+            if (!res.ok) {
+              console.warn(`Naming skipped for ${cluster.dbId} — quota or server error`)
+              continue
+            }
+
             const data = await res.json()
             if (data.name) {
               setClusters(prev =>
@@ -103,7 +112,7 @@ export default function ClusterGrid({ photos, roomId }: Props) {
               )
             }
           } catch {
-            // skip silently
+            console.warn('Cluster naming failed — skipping silently')
           }
         }
 
@@ -151,8 +160,6 @@ export default function ClusterGrid({ photos, roomId }: Props) {
                   className="w-full h-full object-cover"
                 />
               </div>
-
-              {/* Name OR photo count */}
               {cluster.name ? (
                 <p className="text-xs text-white text-center font-medium truncate px-1">
                   {cluster.name}

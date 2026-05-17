@@ -1,4 +1,3 @@
-// Client component — handles download + delete on cluster photos
 'use client'
 
 import { useState } from 'react'
@@ -35,7 +34,6 @@ export default function ClusterPhotoGrid({ photos, roomId }: Props) {
         setPhotoList(prev => [photo, ...prev])
         alert('Failed to delete. Try again.')
       } else if (photoList.length === 1) {
-        // Last photo deleted — go back to room
         router.push(`/room/${roomId}`)
       }
     } catch {
@@ -82,7 +80,7 @@ export default function ClusterPhotoGrid({ photos, roomId }: Props) {
               className="w-full h-auto block group-hover:brightness-75 transition duration-200"
             />
 
-            {/* Delete button */}
+            {/* Delete — top right */}
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -94,7 +92,7 @@ export default function ClusterPhotoGrid({ photos, roomId }: Props) {
               ×
             </button>
 
-            {/* Download button */}
+            {/* Download — bottom right */}
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -108,7 +106,7 @@ export default function ClusterPhotoGrid({ photos, roomId }: Props) {
         ))}
       </div>
 
-      {/* Preview modal */}
+      {/* Fullscreen preview modal */}
       {preview && (
         <div
           className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4"
