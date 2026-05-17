@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { extractFaceDescriptors } from '@/app/lib/faceExtract'
 import { clusterFaces, Cluster } from '@/app/lib/clustering'
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 interface Props {
   photos: { id: string; cloudinary_url: string }[]
   roomId: string
@@ -34,7 +36,6 @@ export default function ClusterGrid({ photos, roomId }: Props) {
         const existingData = await existingRes.json()
 
         if (existingData.clusters && existingData.clusters.length > 0) {
-          // Already clustered — load from DB, skip re-clustering
           const loaded: NamedCluster[] = existingData.clusters.map((c: any) => ({
             id: c.id,
             dbId: c.id,
@@ -46,7 +47,42 @@ export default function ClusterGrid({ photos, roomId }: Props) {
           setClusters(loaded)
           setLoading(false)
           setProgress('')
-          return
+
+          // Check if any clusters still need naming
+          const unnamed = loaded.filter(c => !c.name)
+          if (unnamed.length === 0) return // all named, done ✅
+
+          // Some unnamed — try naming them with delay
+          for (let i = 0; i < unnamed.length; i++) {
+            const cluster = unnamed[i]
+            if (i > 0) await delay(5000) // 5s gap between calls
+
+            try {
+              const res = await fetch(`/api/rooms/${roomId}/clusters/name`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  clusterId: cluster.dbId,
+                  coverPhotoUrl: cluster.coverPhotoUrl,
+                  photoCount: cluster.photoIds.length,
+                }),
+              })
+
+              if (!res.ok) continue
+
+              const data = await res.json()
+              if (data.name) {
+                setClusters(prev =>
+                  prev.map(c =>
+                    c.dbId === cluster.dbId ? { ...c, name: data.name } : c
+                  )
+                )
+              }
+            } catch {
+              console.warn('Retry naming failed — will try next reload')
+            }
+          }
+          return // ← exit after handling unnamed clusters
         }
 
         // Step 2 — No existing clusters, run fresh
@@ -84,8 +120,14 @@ export default function ClusterGrid({ photos, roomId }: Props) {
         setLoading(false)
         setProgress('')
 
-        // Step 4 — Name each cluster async (don't block UI)
-        for (const cluster of namedClusters) {
+        // Step 4 — Name each cluster with delay between calls
+        // 5s gap prevents hitting 15 RPM quota
+        for (let i = 0; i < namedClusters.length; i++) {
+          const cluster = namedClusters[i]
+
+          // Wait before each call except the first
+          if (i > 0) await delay(5000)
+
           try {
             const res = await fetch(`/api/rooms/${roomId}/clusters/name`, {
               method: 'POST',
@@ -97,7 +139,6 @@ export default function ClusterGrid({ photos, roomId }: Props) {
               }),
             })
 
-            // If quota hit or any error — skip naming, don't crash
             if (!res.ok) {
               console.warn(`Naming skipped for ${cluster.dbId} — quota or server error`)
               continue
