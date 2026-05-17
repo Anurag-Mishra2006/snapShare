@@ -26,11 +26,11 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   // Insert all new clusters
   const rows = clusters.map((c: any) => ({
-    id: `${roomId}_${c.id}`,        // e.g. "HMhPS-O5_cluster_0"
+    id: `${roomId}_${c.id}`,
     room_id: roomId,
-    name: null,                      // Phase 1C will fill this via Gemini
-    photo_ids: c.photoIds,           // jsonb array
-    cover_photo_id: c.coverPhotoUrl, // used for the card thumbnail
+    name: null,
+    photo_ids: c.photoUrls,      // ← save URLs (not IDs)
+    cover_photo_id: c.coverPhotoUrl,
     created_at: new Date().toISOString(),
   }))
 

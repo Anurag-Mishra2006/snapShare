@@ -8,25 +8,51 @@ import { clusterFaces, Cluster } from '@/app/lib/clustering'
 
 interface Props {
   photos: { id: string; cloudinary_url: string }[]
-  roomId: string  // ← add this prop
+  roomId: string
+}
+
+// Extend Cluster with optional name
+interface NamedCluster extends Cluster {
+  dbId: string
+  name: string | null
 }
 
 export default function ClusterGrid({ photos, roomId }: Props) {
   const router = useRouter()
-  const [clusters, setClusters] = useState<Cluster[]>([])
+  const [clusters, setClusters] = useState<NamedCluster[]>([])
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (photos.length < 2) return
 
     async function runClustering() {
       setLoading(true)
-      setProgress('Loading face detection models...')
+      setProgress('Loading groups...')
 
       try {
-        setProgress(`Scanning ${photos.length} photos for faces...`)
+        // Step 1 — Check if clusters already exist in DB
+        const existingRes = await fetch(`/api/rooms/${roomId}/clusters`)
+        const existingData = await existingRes.json()
+
+        if (existingData.clusters && existingData.clusters.length > 0) {
+          // Already clustered — just load from DB, skip everything
+          const loaded: NamedCluster[] = existingData.clusters.map((c: any) => ({
+            id: c.id,
+            dbId: c.id,
+            name: c.name,
+            photoIds: c.photo_ids ?? [],
+            photoUrls: c.photo_ids ?? [],
+            coverPhotoUrl: c.cover_photo_id,
+          }))
+          setClusters(loaded)
+          setLoading(false)
+          setProgress('')
+          return // ← exit early, no re-clustering
+        }
+
+        // Step 2 — No existing clusters, run fresh clustering
+        setProgress('Loading face detection models...')
         const descriptors = await extractFaceDescriptors(photos)
 
         if (descriptors.length < 2) {
@@ -36,14 +62,11 @@ export default function ClusterGrid({ photos, roomId }: Props) {
 
         setProgress('Grouping matching faces...')
         const found = clusterFaces(descriptors)
-
         if (found.length === 0) {
           setLoading(false)
           return
         }
 
-        // Save clusters to Supabase
-        setSaving(true)
         setProgress('Saving groups...')
         await fetch(`/api/rooms/${roomId}/clusters`, {
           method: 'POST',
@@ -51,12 +74,43 @@ export default function ClusterGrid({ photos, roomId }: Props) {
           body: JSON.stringify({ clusters: found }),
         })
 
-        setClusters(found)
+        const namedClusters: NamedCluster[] = found.map(c => ({
+          ...c,
+          dbId: `${roomId}_${c.id}`,
+          name: null,
+        }))
+        setClusters(namedClusters)
+        setLoading(false)
+        setProgress('')
+
+        // Step 3 — Name each cluster (only runs once, first time)
+        for (const cluster of namedClusters) {
+          try {
+            const res = await fetch(`/api/rooms/${roomId}/clusters/name`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                clusterId: cluster.dbId,
+                coverPhotoUrl: cluster.coverPhotoUrl,
+                photoCount: cluster.photoIds.length,
+              }),
+            })
+            const data = await res.json()
+            if (data.name) {
+              setClusters(prev =>
+                prev.map(c =>
+                  c.dbId === cluster.dbId ? { ...c, name: data.name } : c
+                )
+              )
+            }
+          } catch {
+            // skip silently
+          }
+        }
+
       } catch (err) {
         console.error('Clustering failed:', err)
-      } finally {
         setLoading(false)
-        setSaving(false)
         setProgress('')
       }
     }
@@ -64,10 +118,8 @@ export default function ClusterGrid({ photos, roomId }: Props) {
     runClustering()
   }, [photos.length, roomId])
 
-  // Navigate to dedicated cluster page on click
-  function handleClusterClick(cluster: Cluster) {
-    const clusterId = `${roomId}_${cluster.id}` // matches what we saved
-    router.push(`/room/${roomId}/cluster/${clusterId}`)
+  function handleClusterClick(cluster: NamedCluster) {
+    router.push(`/room/${roomId}/cluster/${cluster.dbId}`)
   }
 
   if (!loading && clusters.length === 0) return null
@@ -100,9 +152,17 @@ export default function ClusterGrid({ photos, roomId }: Props) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <p className="text-xs text-gray-400 text-center">
-                {cluster.photoIds.length} photo{cluster.photoIds.length !== 1 ? 's' : ''}
-              </p>
+
+              {/* Name OR photo count */}
+              {cluster.name ? (
+                <p className="text-xs text-white text-center font-medium truncate px-1">
+                  {cluster.name}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 text-center">
+                  {cluster.photoIds.length} photo{cluster.photoIds.length !== 1 ? 's' : ''}
+                </p>
+              )}
             </button>
           ))}
         </div>
