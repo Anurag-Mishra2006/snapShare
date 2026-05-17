@@ -1,4 +1,3 @@
-// src/app/api/moderate/route.ts
 // Checks if an image is safe using Gemini Vision
 // Called from the upload route before saving to Supabase
 

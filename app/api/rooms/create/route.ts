@@ -1,4 +1,3 @@
-// src/app/api/rooms/create/route.ts
 // Creates a new room in Supabase and returns the room ID
 
 import { NextResponse } from 'next/server'

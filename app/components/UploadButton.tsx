@@ -1,6 +1,3 @@
-// src/components/UploadButton.tsx
-// Client component — handles file selection, compression, and upload
-
 'use client'
 
 import { useState } from 'react'

@@ -1,4 +1,3 @@
-// src/app/api/rooms/[roomId]/photos/[photoId]/route.ts
 // Deletes a single photo from Cloudinary + Supabase
 
 import { NextRequest, NextResponse } from 'next/server'

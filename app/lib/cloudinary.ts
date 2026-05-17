@@ -1,4 +1,3 @@
-// src/lib/cloudinary.ts
 // Server-side only — never import this in client components
 // Handles authenticated Cloudinary uploads
 

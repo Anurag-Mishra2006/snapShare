@@ -1,7 +1,3 @@
-// src/app/api/cron/cleanup/route.ts
-// Called by Vercel cron every hour
-// Deletes expired rooms from Cloudinary + Supabase
-
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/app/lib/supabase'
 import cloudinary from '@/app/lib/cloudinary'

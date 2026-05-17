@@ -1,4 +1,3 @@
-// src/lib/gemini.ts
 // Gemini implementation — free tier, 1500 req/day
 // To switch to Claude later, only ai.ts needs to change
 

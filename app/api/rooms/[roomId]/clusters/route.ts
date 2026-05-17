@@ -1,4 +1,3 @@
-// src/app/api/rooms/[roomId]/clusters/route.ts
 // Saves clusters to Supabase after DBSCAN runs client-side
 // Also deletes old clusters for this room before saving new ones
 // (re-clustering after new uploads = fresh results)

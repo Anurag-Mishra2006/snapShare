@@ -1,4 +1,3 @@
-// src/app/api/rooms/[roomId]/clusters/name/route.ts
 // Called after clusters are saved
 // Sends cover photo to Gemini → gets a name → saves to DB
 

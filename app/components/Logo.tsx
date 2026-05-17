@@ -1,5 +1,3 @@
-// src/components/Logo.tsx
-// Reusable SnapShare logo — used in navbar and homepage
 
 export default function Logo() {
   return (

@@ -1,4 +1,3 @@
-// src/app/room/[roomId]/page.tsx
 import QRCode from 'qrcode'
 import { supabase } from '@/app/lib/supabase'
 import { notFound } from 'next/navigation'

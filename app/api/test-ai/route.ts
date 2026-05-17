@@ -1,5 +1,3 @@
-// src/app/api/test-ai/route.ts
-// TEMPORARY — delete after testing
 
 import { NextResponse } from 'next/server'
 import { callAI } from '@/app/lib/ai'

@@ -1,4 +1,3 @@
-// src/lib/ai.ts
 // Provider-agnostic AI wrapper
 // THIS is the only file you change when switching to Claude
 // Just swap callGemini for callClaude — nothing else changes

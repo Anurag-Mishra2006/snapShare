@@ -1,4 +1,3 @@
-// src/components/CopyButton.tsx
 'use client'
 
 import { useState } from 'react'

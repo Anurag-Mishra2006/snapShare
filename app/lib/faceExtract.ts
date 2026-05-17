@@ -1,4 +1,3 @@
-// src/lib/faceExtract.ts
 // Runs entirely in the browser — no server, no API call
 // Loads face-api.js models once, then extracts a 128-number
 // "descriptor" from each photo. Same face = similar numbers.

@@ -1,4 +1,3 @@
-// src/lib/supabase.ts
 // Single shared Supabase client instance
 // Import this wherever you need DB access
 

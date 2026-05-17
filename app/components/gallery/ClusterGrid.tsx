@@ -1,4 +1,3 @@
-// src/components/gallery/ClusterGrid.tsx
 'use client'
 
 import { useEffect, useState } from 'react'

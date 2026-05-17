@@ -1,4 +1,3 @@
-// src/lib/clustering.ts
 // DBSCAN clustering algorithm — pure math, no library needed
 //
 // HOW IT WORKS:

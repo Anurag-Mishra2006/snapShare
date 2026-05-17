@@ -1,4 +1,3 @@
-// src/app/room/[roomId]/PhotoGrid.tsx
 'use client'
 
 import { useState } from 'react'

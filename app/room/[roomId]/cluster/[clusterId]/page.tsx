@@ -1,4 +1,3 @@
-// src/app/room/[roomId]/cluster/[clusterId]/page.tsx
 // Dedicated page for a person's photos
 // Shows all photos in that cluster with download + delete
 

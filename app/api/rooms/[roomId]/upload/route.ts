@@ -1,4 +1,3 @@
-// src/app/api/rooms/[roomId]/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/app/lib/supabase'
 import cloudinary from '@/app/lib/cloudinary'
