@@ -9,6 +9,8 @@ import PhotoGrid from './PhotoGrid'
 import Logo from '@/app/components/Logo'
 import ClusterGrid from '@/app/components/gallery/ClusterGrid'
 import Link from 'next/link'
+import ShareButtons from '@/app/components/ShareButton'
+// import ShareButtons from '@/app/components/ShareButtons'
 
 interface Props {
   params: Promise<{ roomId: string }>
@@ -115,6 +117,7 @@ export default async function RoomPage({ params }: Props) {
             {roomUrl}
           </p>
           <CopyButton url={roomUrl} />
+          <ShareButtons url={roomUrl} title="Join my SnapShare room and upload photos!" />
         </div>
 
         <div className="flex items-center gap-3 mb-6">
