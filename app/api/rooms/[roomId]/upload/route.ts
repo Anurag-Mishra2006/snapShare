@@ -139,48 +139,56 @@ Examples:
         moderationStatus = 'approved'
       }
     }
-      // Step 3 — Save to Supabase with moderation status
-      const { data: inserted, error: insertError } = await supabase
-        .from('photos')
-        .insert({
-          room_id: roomId,
-          cloudinary_url: uploadResult.secure_url,
-          cloudinary_public_id: uploadResult.public_id,
-          moderation_status: moderationStatus,
-        })
-        .select('id')
-        .single()
-
-      if (insertError || !inserted) {
-        console.error('Failed to save photo to DB:', insertError?.message)
-        return NextResponse.json(
-          { success: false, error: 'Failed to save photo' },
-          { status: 500 }
-        )
-      }
-      //  Count photos to maybe trigger room title
-      const { count } = await supabase
-        .from('photos')
-        .select('*', { count: 'exact', head: true })
-        .eq('room_id', roomId)
-
-      // Trigger title generation on exactly the 3rd photo
-      // Fire and forget — don't await, don't block the upload response
-      if (count === 3) {
-        fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/rooms/${roomId}/title`, {
-          method: 'POST',
-        }).catch(() => { }) // silent fail — title is a bonus feature
-      }
-      return NextResponse.json({
-        success: true,
-        url: uploadResult.secure_url,
-        id: inserted.id,
-        publicId: uploadResult.public_id,
+    // Step 3 — Save to Supabase with moderation status
+    const { data: inserted, error: insertError } = await supabase
+      .from('photos')
+      .insert({
+        room_id: roomId,
+        cloudinary_url: uploadResult.secure_url,
+        cloudinary_public_id: uploadResult.public_id,
+        moderation_status: moderationStatus,
       })
+      .select('id')
+      .single()
 
-
+    if (insertError || !inserted) {
+      console.error('Failed to save photo to DB:', insertError?.message)
+      return NextResponse.json(
+        { success: false, error: 'Failed to save photo' },
+        { status: 500 }
+      )
     }
-   catch (err: any) {
+    //  Count photos to maybe trigger room title
+    const { count } = await supabase
+      .from('photos')
+      .select('*', { count: 'exact', head: true })
+      .eq('room_id', roomId)
+
+    // Trigger room title on 3rd photo
+    if (count === 3) {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/rooms/${roomId}/title`, {
+        method: 'POST',
+      }).catch(() => { })
+    }
+
+    // Clear clusters on every new upload — forces re-clustering
+    // on next page load with all photos including the new one
+    if (count && count > 0) {
+      await supabase
+        .from('clusters')
+        .delete()
+        .eq('room_id', roomId)
+    }
+    return NextResponse.json({
+      success: true,
+      url: uploadResult.secure_url,
+      id: inserted.id,
+      publicId: uploadResult.public_id,
+    })
+
+
+  }
+  catch (err: any) {
     console.error('Upload failed:', err.message)
     return NextResponse.json(
       { success: false, error: err.message },
