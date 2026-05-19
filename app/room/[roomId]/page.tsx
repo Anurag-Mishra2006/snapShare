@@ -10,7 +10,8 @@ import Logo from '@/app/components/Logo'
 import ClusterGrid from '@/app/components/gallery/ClusterGrid'
 import Link from 'next/link'
 import ShareButtons from '@/app/components/ShareButton'
-// import ShareButtons from '@/app/components/ShareButtons'
+import ExpiryCountdown from '@/app/components/ExpiryCountdown'
+import QRDownloadButton from '@/app/components/QRDownloadButton'
 
 interface Props {
   params: Promise<{ roomId: string }>
@@ -50,7 +51,7 @@ export default async function RoomPage({ params }: Props) {
             {/* AI Recap */}
             {room.recap && (
               <p className="text-gray-300 text-sm leading-relaxed mb-6 italic">
-                "{room.recap}"
+                `{room.recap}`
               </p>
             )}
 
@@ -101,11 +102,9 @@ export default async function RoomPage({ params }: Props) {
               <p className="text-xs text-gray-500 mt-1 ml-1">{room.title}</p>
             )}
           </div>
-          <div className="text-xs text-gray-600 bg-gray-900 px-3 py-1.5 rounded-full">
-            ⏳ Expires in 24h
-          </div>
+          <ExpiryCountdown expiresAt={room.expires_at} />
         </div>
-
+          {/* QR Card */}
         <div className="bg-gray-900 rounded-2xl p-6 flex flex-col items-center gap-4 mb-8">
           <p className="text-sm text-gray-400 font-medium">
             Scan to join this room
@@ -113,6 +112,7 @@ export default async function RoomPage({ params }: Props) {
           <div className="bg-white p-3 rounded-xl shadow-lg">
             <img src={qrCodeDataUrl} alt="Room QR Code" width={160} height={160} />
           </div>
+            <QRDownloadButton qrDataUrl={qrCodeDataUrl} roomId={roomId} />
           <p className="text-xs text-gray-600 font-mono break-all text-center px-2">
             {roomUrl}
           </p>
