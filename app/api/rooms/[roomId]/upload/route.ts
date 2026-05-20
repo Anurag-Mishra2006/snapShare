@@ -47,6 +47,10 @@ export async function POST(req: NextRequest, { params }: Props) {
       folder: `rooms/${roomId}`,
       public_id: `snapshare_${timestamp}`,
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+      transformation: [
+        { quality: 'auto' },   //  auto quality optimization
+        { fetch_format: 'auto' } //   auto format (webp for browsers that support it)
+      ],
     })
 
     // Step 2 — Moderate the image using Gemini

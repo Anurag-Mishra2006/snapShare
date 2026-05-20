@@ -150,6 +150,7 @@ export default function PhotoGrid({ initialPhotos, roomId }: Props) {
               <img
                 src={photo.cloudinary_url}
                 alt="Shared photo"
+                loading="lazy"
                 className="w-full h-auto block group-hover:brightness-75 transition duration-200"
               />
               <button
@@ -186,6 +187,7 @@ export default function PhotoGrid({ initialPhotos, roomId }: Props) {
             <img
               src={preview.cloudinary_url}
               alt="Preview"
+              loading="lazy"
               className="w-full rounded-2xl max-h-[80vh] object-contain shadow-2xl"
             />
             <div className="flex gap-3 mt-5">

@@ -198,7 +198,8 @@ export default function ClusterGrid({ photos, roomId }: Props) {
                 <img
                   src={cluster.coverPhotoUrl}
                   alt="Person"
-                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  className="w-full h-full object-cover block group-hover:brightness-75 transition duration-200"
                 />
               </div>
               {cluster.name ? (
